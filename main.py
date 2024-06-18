@@ -1,3 +1,5 @@
+import os
+from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
 import yfinance as yf
@@ -5,6 +7,10 @@ import talib
 from datetime import datetime
 import discord
 from discord.ext import tasks
+
+# Load environment variables from .env file
+load_dotenv()
+
 
 # Function to fetch and process stock data
 def fetch_and_process_data(tickers):
@@ -97,15 +103,66 @@ def fetch_and_process_data(tickers):
         ]
     ]
 
-    return buy_signals_summary
+    # Filter for today's entries
+    today = datetime.now().strftime("%Y-%m-%d")
+    today_signals_summary = buy_signals_summary[buy_signals_summary["Date"] == today]
+
+    return today_signals_summary
 
 
 # Fetch and process data to test the strategy
-tickers = ["SPY", "NVDA", "CLH", "FIZZ", "MPWR", "CMG", "ASML", "TSM", "AEHR", "TFII", "GOOG",
-        "GOOGL", "ANET", "AXON", "ANF", "IRMD", "SNPS", "CDRE", "SKX", "TSLA", "EXPO",
-        "PODD", "INFY", "AMAT", "IBP", "NVMI", "DY", "RMBS", "RPM", "ELF", "APH", "ISRG",
-        "VRTX", "CTAS", "MLM", "AAON", "CSWI", "LMB", "PRFT", "CAMT", "ODD", "QCOM", "SYK",
-        "LRCX", "LOGI", "TDCX", "WNS", "RL", "TTC", "DECK"]  # Example tickers, you can add more
+tickers = [
+    "SPY",
+    "NVDA",
+    "CLH",
+    "FIZZ",
+    "MPWR",
+    "CMG",
+    "ASML",
+    "TSM",
+    "AEHR",
+    "TFII",
+    "GOOG",
+    "GOOGL",
+    "ANET",
+    "AXON",
+    "ANF",
+    "IRMD",
+    "SNPS",
+    "CDRE",
+    "SKX",
+    "TSLA",
+    "EXPO",
+    "PODD",
+    "INFY",
+    "AMAT",
+    "IBP",
+    "NVMI",
+    "DY",
+    "RMBS",
+    "RPM",
+    "ELF",
+    "APH",
+    "ISRG",
+    "VRTX",
+    "CTAS",
+    "MLM",
+    "AAON",
+    "CSWI",
+    "LMB",
+    "PRFT",
+    "CAMT",
+    "ODD",
+    "QCOM",
+    "SYK",
+    "LRCX",
+    "LOGI",
+    "TDCX",
+    "WNS",
+    "RL",
+    "TTC",
+    "DECK",
+]  # Example tickers, you can add more
 buy_signals_summary = fetch_and_process_data(tickers)
 
 # Export buy signals to a CSV file
@@ -147,5 +204,7 @@ async def check_signals():
             f"----------------------"
         )
 
+
 # Run the bot with your token
-client.run("")
+discord_token = os.getenv("DISCORD_TOKEN")
+client.run(discord_token)
