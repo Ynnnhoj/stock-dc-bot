@@ -1,10 +1,11 @@
 import os
+from datetime import datetime
+from datetime import timedelta
 from dotenv import load_dotenv
 import pandas as pd
 import numpy as np
 import yfinance as yf
 import talib
-from datetime import datetime
 import discord
 from discord.ext import tasks
 
@@ -19,7 +20,12 @@ def fetch_and_process_data(tickers):
 
     all_data = []
     for ticker in tickers:
-        df = yf.download(ticker, start=start_date, end=end_date)
+        df = yf.download(
+            ticker,
+            start=start_date,
+            end=end_date,
+            progress=True,
+        )
         df["Ticker"] = ticker
         all_data.append(df)
 
@@ -102,12 +108,13 @@ def fetch_and_process_data(tickers):
             "Stop_Loss",
         ]
     ]
-
-    # Filter for today's entries
-    today = datetime.now().strftime("%Y-%m-%d")
-    today_signals_summary = buy_signals_summary[buy_signals_summary["Date"] == today]
-
-    return today_signals_summary
+    target_date = datetime.now() - timedelta(days=7)
+    new_signals_summary = buy_signals_summary[
+        buy_signals_summary["Date"] >= target_date
+    ]
+    df = df.sort_values(by="Date")
+    new_signals_summary = new_signals_summary.sort_values(by="Date")
+    return new_signals_summary
 
 
 # Fetch and process data to test the strategy
@@ -164,6 +171,7 @@ tickers = [
     "DECK",
 ]  # Example tickers, you can add more
 buy_signals_summary = fetch_and_process_data(tickers)
+buy_signals_summary = buy_signals_summary.sort_values(by="Date")
 
 # Export buy signals to a CSV file
 output_file = "buy_signals_summary.csv"
@@ -175,36 +183,50 @@ print(f"Buy signals summary exported to {output_file}")
 intents = discord.Intents.default()
 client = discord.Client(intents=intents)
 
+ready = True
+
 
 @client.event
 async def on_ready():
-    print(f"We have logged in as {client.user}")
-    await check_signals.start()
+    global ready
+    if ready:
+        check_signals.start()
+        print("We are connected.")
+        ready = False
 
 
-@tasks.loop(hours=1)  # Check every hour
+@tasks.loop(minutes=1)
 async def check_signals():
-    channel_id = 1251391850984636496  # Replace with your channel ID
-    channel = client.get_channel(channel_id)
+    channel = client.get_channel(int((os.environ.get("CHANNEL_ID"))))
     if not channel:
         print("Channel not found!")
         return
 
     buy_signals_summary = fetch_and_process_data(tickers)
+    buy_signals_summary["Date"] = pd.to_datetime(buy_signals_summary["Date"]).dt.date
+    buy_signals_summary = buy_signals_summary.sort_values(by="Date")
+
     for index, row in buy_signals_summary.iterrows():
-        await channel.send(
-            f"Date: {row['Date']}\n"
-            f"Ticker: {row['Ticker']}\n"
-            f"Close: {row['Close']}\n"
-            f"Take Profit 5%: {row['Take_Profit_5']}\n"
-            f"Take Profit 10%: {row['Take_Profit_10']}\n"
-            f"Take Profit 15%: {row['Take_Profit_15']}\n"
-            f"Take Profit 20%: {row['Take_Profit_20']}\n"
-            f"Stop Loss: {row['Stop_Loss']}\n"
-            f"----------------------"
-        )
+        try:
+            await channel.send(
+                f"Date: {row['Date']}\n"
+                f"Ticker: {row['Ticker']}\n"
+                f"Close: {row['Close']}\n"
+                f"Take Profit 5%: {row['Take_Profit_5']}\n"
+                f"Take Profit 10%: {row['Take_Profit_10']}\n"
+                f"Take Profit 15%: {row['Take_Profit_15']}\n"
+                f"Take Profit 20%: {row['Take_Profit_20']}\n"
+                f"Stop Loss: {row['Stop_Loss']}\n"
+                f"----------------------"
+            )
+        except discord.Forbidden:
+            print("Forbidden to send message to the channel.")
+        except discord.HTTPException as e:
+            print(f"HTTP error occured: {e.status} {e.text}")
+        except Exception as e:
+            print(f"An error occured: {e}")
 
 
 # Run the bot with your token
-discord_token = os.getenv("DISCORD_TOKEN")
+discord_token = os.environ.get("DISCORD_TOKEN")
 client.run(discord_token)
