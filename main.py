@@ -24,7 +24,7 @@ def fetch_and_process_data(tickers):
             ticker,
             start=start_date,
             end=end_date,
-            progress=True,
+            progress=False,
         )
         df["Ticker"] = ticker
         all_data.append(df)
@@ -108,7 +108,7 @@ def fetch_and_process_data(tickers):
             "Stop_Loss",
         ]
     ]
-    target_date = datetime.now() - timedelta(days=7)
+    target_date = datetime.now() - timedelta(days=3)
     new_signals_summary = buy_signals_summary[
         buy_signals_summary["Date"] >= target_date
     ]
@@ -195,7 +195,7 @@ async def on_ready():
         ready = False
 
 
-@tasks.loop(minutes=1)
+@tasks.loop(hours=1)
 async def check_signals():
     channel = client.get_channel(int((os.environ.get("CHANNEL_ID"))))
     if not channel:
