@@ -12,7 +12,6 @@ from discord.ext import tasks
 # Load environment variables from .env file
 load_dotenv()
 
-
 # Function to fetch and process stock data
 def fetch_and_process_data(tickers):
     start_date = "2020-01-01"
@@ -24,7 +23,7 @@ def fetch_and_process_data(tickers):
             ticker,
             start=start_date,
             end=end_date,
-            progress=False,
+            progress=True,
         )
         df["Ticker"] = ticker
         all_data.append(df)
@@ -46,23 +45,6 @@ def fetch_and_process_data(tickers):
     # Calculate RSI_EMA
     rsi_ema_period = 200
     df["RSI_EMA"] = talib.EMA(rsi, timeperiod=rsi_ema_period)
-    df["RSI_EMA"] = df["RSI_EMA"].shift(
-        1
-    )  # Shift by one to match the EMA calculation logic
-
-    # Correct RSI_EMA calculation
-    df.loc[rsi_ema_period - 1, "RSI_EMA"] = rsi.mean()  # Set the first EMA value
-
-    alpha = 2 / (rsi_ema_period + 1)
-    for i in range(rsi_ema_period, len(df)):
-        df.at[df.index[i], "RSI_EMA"] = (
-            alpha * df.at[df.index[i], "RSI"]
-            + (1 - alpha) * df.at[df.index[i - 1], "RSI_EMA"]
-        )
-
-    # Apply offset to RSI_EMA
-    offset = 2.6309955317848335
-    df["RSI_EMA"] += offset
 
     # Strategy Logic
     df["Bullish_Run_Start"] = (
@@ -112,7 +94,7 @@ def fetch_and_process_data(tickers):
             "Stop_Loss",
         ]
     ]
-    target_date = datetime.now() - timedelta(days=3)
+    target_date = datetime.now() - timedelta(days=5)
     new_signals_summary = buy_signals_summary[
         buy_signals_summary["Date"] >= target_date
     ]
@@ -173,15 +155,27 @@ tickers = [
     "RL",
     "TTC",
     "DECK",
-]  # Example tickers, you can add more
+    "ADMA",
+    "ALAR",
+    "APP",
+    "ATAT",
+    "CLSK",
+    "GCT",
+    "GRAB",
+    "INVZ",
+    "MNKD",
+    "NVDA",
+    "ORC",
+    "SBFM",
+    "SOFI",
+    "TRVN",
+    "UBS",
+]  
 buy_signals_summary = fetch_and_process_data(tickers)
 buy_signals_summary = buy_signals_summary.sort_values(by="Date")
 
-# Export buy signals to a CSV file
 output_file = "buy_signals_summary.csv"
 buy_signals_summary.to_csv(output_file, index=False)
-
-print(f"\nBuy signals summary exported to {output_file}")
 
 # Discord Bot
 intents = discord.Intents.default()
