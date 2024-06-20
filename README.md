@@ -22,7 +22,7 @@ This is a Python script that fetches and processes stock data, applies a trading
 1. Install the required libraries by running `pip install -r requirements.txt`.
 2. Install `talib`, check https://github.com/TA-Lib/ta-lib-python.git 
 3. Set the environment variables in a `.env` file.
-4. Run the script using `python script.py`.
+4. Run the script using `python main.py`.
 
 **Note**
 
