@@ -1,19 +1,28 @@
-Discord Stock Alert Bot
+README
+=====
 
-This project is a Stock Trading Bot that fetches and processes stock data, calculates trading signals, and sends notifications to a Discord channel. It uses various Python libraries to achieve this, including yfinance for stock data, TA-Lib for technical analysis, pandas for data manipulation, and discord.py for Discord bot functionality.
-Features
+This is a Python script that fetches and processes stock data, applies a trading strategy, and sends buy signals to a Discord channel.
 
-  - Fetch and Process Stock Data: Retrieve historical stock data for a list of tickers.
-  - Technical Indicators Calculation: Calculate MACD and RSI indicators, along with an EMA of RSI.
-  - Trading Signals: Identify buy signals based on the calculated indicators.
-  - Notification: Send the trading signals to a specified Discord channel.
-  - Automation: Automatically check and send trading signals every 6 hours.
+**Functionality**
 
-Requirements
+1. The script fetches historical stock data for a list of tickers using the `yfinance` library.
+2. It calculates various technical indicators, including MACD, RSI, and EMA, using the `talib` library.
+3. The script applies a trading strategy based on the calculated indicators and generates buy signals.
+4. The buy signals are exported to a CSV file.
+5. The script uses a Discord bot to send the buy signals to a specified channel.
 
-  - Python 3.7 or higher
-  - A Discord bot token
-  - A Discord channel ID
-  - .env file with the following environment variables:
-    - DISCORD_TOKEN: Your Discord bot token.
-    - CHANNEL_ID: The ID of the Discord channel where notifications will be sent.
+**Configuration**
+
+1. The script uses environment variables to store the Discord token and channel ID. You need to set these variables in a `.env` file.
+2. The list of tickers can be modified in the `tickers` variable.
+3. The trading strategy can be modified by adjusting the calculations and conditions in the `fetch_and_process_data` function.
+
+**Running the Script**
+
+1. Install the required libraries by running `pip install -r requirements.txt`.
+2. Set the environment variables in a `.env` file.
+3. Run the script using `python script.py`.
+
+**Note**
+
+This script is for educational purposes only and should not be used for actual trading decisions without further testing and validation.
