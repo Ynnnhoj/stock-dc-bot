@@ -65,14 +65,18 @@ def fetch_and_process_data(tickers):
     df["RSI_EMA"] += offset
 
     # Strategy Logic
-    df["Bullish_Run_Start"] = (df["MACD_line"] > df["Signal_line"]) & (
-        df["MACD_line"].shift(1) <= df["Signal_line"].shift(1)
+    df["Bullish_Run_Start"] = (
+        (df["MACD_line"] > df["Signal_line"])
+        & (df["MACD_line"].shift(1) <= df["Signal_line"].shift(1))
+        & (df["Signal_line"] <= df["Histo_line"])
     )
+
     df["RSI_Oversold"] = (
         (df["RSI"] <= df["RSI_EMA"])
         | (df["RSI"].shift(1) <= df["RSI_EMA"].shift(1))
         | (df["RSI"].shift(2) <= df["RSI_EMA"].shift(2))
     )
+
     df["Buy_Signal"] = df["Bullish_Run_Start"] & df["RSI_Oversold"]
 
     # Initialize columns for take profit and stop loss
@@ -177,7 +181,7 @@ buy_signals_summary = buy_signals_summary.sort_values(by="Date")
 output_file = "buy_signals_summary.csv"
 buy_signals_summary.to_csv(output_file, index=False)
 
-print(f"Buy signals summary exported to {output_file}")
+print(f"\nBuy signals summary exported to {output_file}")
 
 # Discord Bot
 intents = discord.Intents.default()
@@ -195,7 +199,7 @@ async def on_ready():
         ready = False
 
 
-@tasks.loop(hours=1)
+@tasks.loop(hours=6)
 async def check_signals():
     channel = client.get_channel(int((os.environ.get("CHANNEL_ID"))))
     if not channel:
